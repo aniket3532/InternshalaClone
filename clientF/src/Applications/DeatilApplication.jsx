@@ -47,7 +47,7 @@ console.log(data)
            
             </div>
             <h4 className=' mt-9'>Applied By</h4>
-     <p className='font-bold -mt-8'>{data.user.name}</p>
+     <p className='font-bold -mt-8'>{data.user.name ? data.user.name : data.user.phoneNumber}</p>
      <div className="flex mt-24 justify-around">
             <button className='bg-blue-700 text-green-400 w-24 font-bold' onClick={()=>handleAcceptAndReject(data._id,"accepted")}>Accept</button>
             <button className='bg-blue-700 text-red-600 w-24 font-bold' onClick={()=>handleAcceptAndReject(data._id,"rejected")}>Reject</button>

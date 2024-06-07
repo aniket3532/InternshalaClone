@@ -1,24 +1,101 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import logo from "../../Assets/logo.png";
 import { Link } from "react-router-dom";
 import "./navbar.css";
 import Sidebar from "./sidebar";
-import { signInWithPopup, signOut } from "firebase/auth";
-import { auth, provider } from "../../Firebase/firebase";
+import { RecaptchaVerifier, signInWithPopup, signOut } from "firebase/auth";
+import { auth, provider, setUpRecaptcha, signInWithPhoneNumber} from "../../Firebase/firebase";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { selectUser } from "../../Feature/Userslice";
+import { useDispatch, useSelector } from "react-redux";
+import { login, logout, selectUser } from "../../Feature/Userslice";
+import { toast } from "react-toastify";
 function Navbar() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const user = useSelector(selectUser);
   const [isDivVisibleForintern, setDivVisibleForintern] = useState(false);
   const [isDivVisibleForJob, setDivVisibleFroJob] = useState(false);
   const [isDivVisibleForlogin, setDivVisibleFrologin] = useState(false);
   const [isDivVisibleForProfile, setDivVisibleProfile] = useState(false);
   const [isStudent, setStudent] = useState(true);
+
+  // Phone authentication state
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [otp, setOtp] = useState("");
+  const [verificationId, setVerificationId] = useState("");
+  const [step, setStep] = useState(0);
+
+
+  const onCaptchVerify = () => {
+    if(!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        'size': 'invisible',
+        'callback': (response) => {
+          //allow sign in with signinWithPhoneNumber
+          requestOtp();
+        },
+        'expired-callback': () => {
+          // Response expired ask user to solve the recaptcha again
+          console.log('recaptcha error');
+        }
+      });
+    }
+  }
+
+  // Request OTP function
+  const requestOtp = () => {
+    onCaptchVerify();
+    const captchaVerifier = window.recaptchaVerifier;
+    const formatph = '++91' + phoneNumber
+    console.log(formatph);
+    signInWithPhoneNumber(auth, formatph, captchaVerifier)
+      .then((confirmationResult) => {
+        window.confirmationResult = confirmationResult;
+        setVerificationId(confirmationResult.verificationId);
+        setStep(2);
+        toast.success("OTP sent successfully");
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  // Verify OTP function
+  const verifyOtp = () => {
+
+    if (!window.confirmationResult) {
+      console.log("No confirmation result found.");
+      return;
+    }
+    console.log(otp);
+    window.confirmationResult.confirm(otp)
+      .then(async(res) => {
+        dispatch(
+          login({
+            name: res.user.displayName,
+            email: res.user.email,
+            phone: res.user.phoneNumber,
+          })
+        );
+        toast.success("success");
+        console.log(res);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    setDivVisibleFrologin(false);
+  };
+
   const loginFunction = () => {
     signInWithPopup(auth, provider)
       .then((res) => {
+        dispatch(
+          login({
+            name: res.user.displayName,
+            email: res.user.email,
+            photo: res.user.photoURL,
+          })
+        );
         console.log(res);
       })
       .catch((err) => {
@@ -67,8 +144,14 @@ function Navbar() {
   };
 
   const logoutFunction = () => {
-    signOut(auth);
-    navigate("/");
+    signOut(auth)
+      .then(() => {
+        dispatch(logout());
+        navigate("/");
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   return (
@@ -160,7 +243,7 @@ function Navbar() {
           )}
         </ul>
       </nav>
-
+      <div id="recaptcha-container"></div>
       {isDivVisibleForintern && (
         <div className="profile-dropdown-2">
           <div className="left-section">
@@ -253,6 +336,25 @@ function Navbar() {
                         </div>
                         <h4 className="text-gray-500">Login With Google</h4>
                       </p>
+                      <p
+                        onClick={() => setStep(1)}
+                        className=" cursor-pointer flex items-center h-9 justify-center mt-4 text-white bg-slate-100 rounded-lg hover:bg-gray-100"
+                      >
+                        <div className="px-4 py-3 cursor-pointer">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            fill="currentColor"
+                            class="bi bi-phone"
+                            viewBox="0 0 16 16"
+                          >
+                            <path d="M11 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM5 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z" />
+                            <path d="M8 14a1 1 0 1 0 0-2 1 1 0 0 0 0 2" />
+                          </svg>
+                        </div>
+                        <h4 className="text-gray-500">Login With Phone</h4>
+                      </p>
                       <div className="mt-4 flex items-center justify-between">
                         <span className="border-b- w-1/5 lg:w-1/4"></span>
                         <p className="text-gray-500 text sm font-bold mb-2">
@@ -261,36 +363,80 @@ function Navbar() {
                         </p>
                         <span className="border-b- w-1/5 lg:w-1/4"></span>
                       </div>
-                      <div class="mt-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">
-                          Email{" "}
-                        </label>
-                        <input
-                          class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                          type="email"
-                          placeholder="john@example.com"
-                        />
-                      </div>
-                      <div class="mt-4">
-                        <div class="flex justify-between">
-                          <label class="block text-gray-700 text-sm font-bold mb-2">
-                            Password
-                          </label>
-                          <a href="/" class="text-xs text-blue-500">
-                            Forget Password?
-                          </a>
-                        </div>
-                        <input
-                          class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                          placeholder="Must be atleast 6 characters"
-                          type="password"
-                        />
-                      </div>
-                      <div className="mt-8">
-                        <button className="btn3  bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600 ">
-                          Login
-                        </button>
-                      </div>
+
+                      {step > 0 && (
+                        <>
+                          <div className="mt-4">
+                            <label className="block text-gray-700 text-sm font-bold mb-2">
+                              Phone Number
+                            </label>
+                            <input
+                              className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                              type="text"
+                              placeholder="Enter your phone number"
+                              value={phoneNumber}
+                              onChange={(e) => setPhoneNumber(e.target.value)}
+                            />
+                          </div>
+                          {step === 2 && (
+                            <div className="mt-4">
+                              <label className="block text-gray-700 text-sm font-bold mb-2">
+                                OTP
+                              </label>
+                              <input
+                                className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                                type="text"
+                                placeholder="Enter the OTP"
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value)}
+                              />
+                            </div>
+                          )}
+                          <div className="mt-8">
+                            <button
+                              className="btn3 bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600"
+                              onClick={step === 1 ? requestOtp : verifyOtp}
+                            >
+                              {step === 1 ? "Request OTP" : "Verify OTP"}
+                            </button>
+                          </div>
+                          
+                        </>
+                      )}
+                      {step === 0 && (
+                        <>
+                          <div class="mt-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                              Email{" "}
+                            </label>
+                            <input
+                              class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                              type="email"
+                              placeholder="john@example.com"
+                            />
+                          </div>
+                          <div class="mt-4">
+                            <div class="flex justify-between">
+                              <label class="block text-gray-700 text-sm font-bold mb-2">
+                                Password
+                              </label>
+                              <a href="/" class="text-xs text-blue-500">
+                                Forget Password?
+                              </a>
+                            </div>
+                            <input
+                              class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                              placeholder="Must be atleast 6 characters"
+                              type="password"
+                            />
+                          </div>
+                          <div className="mt-8">
+                            <button className="btn3  bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600 ">
+                              Login
+                            </button>
+                          </div>
+                        </>
+                      )}
 
                       <div className="mt-4 flex items-center justify-between">
                         <p className="text-sm">

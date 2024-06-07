@@ -37,6 +37,7 @@ useEffect(()=>{
 
 const submitApplication= async()=>{
   const text=document.getElementById("text")
+    // if(!user.name) user.name = user.phoneNumber
     if (text.value==="") {
       alert("Fill the mendetory fildes")
     }

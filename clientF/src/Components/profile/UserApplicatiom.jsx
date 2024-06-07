@@ -69,7 +69,7 @@ function UserApplicatiom() {
                           {new Date(data?.createAt).toLocaleDateString()}
                         </td>
                         <td className="whitespace-nowrap px-6 py-4">
-                          {data.user.name}
+                          {data.user.name ? data.user.name : data.user.phoneNumber}
                         </td>
                         <td className="whitespace-nowrap px-6 py-4">
                           <Link to={`/UserapplicationDetail?a=${data._id}`}>
@@ -117,7 +117,7 @@ function UserApplicatiom() {
                       </h2>
                       <p class="leading-relaxed text-base">
                         {" "}
-                        Applied by {data.user.name}
+                        Applied by {data.user.name ? data.user.name : data.user.phoneNumber}
                       </p>
                       <p class="leading-relaxed text-base">
                         {" "}

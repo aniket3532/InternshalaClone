@@ -1,9 +1,14 @@
 import React, { useState } from "react";
-import { signInWithPopup } from "firebase/auth";
+import {
+  RecaptchaVerifier,
+  signInWithPopup,
+} from "firebase/auth";
 import "./register.css";
-import { auth, provider } from "../../Firebase/firebase";
+import { auth, provider, signInWithPhoneNumber } from "../../Firebase/firebase";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useDispatch } from "react-redux";
+import { login } from "../../Feature/Userslice";
 function Register() {
   const [isStudent, setStudent] = useState(true);
   const [isDivVisible, setDivVisible] = useState(false);
@@ -11,10 +16,90 @@ function Register() {
   const [lname, setLname] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  // Phone authentication state
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [otp, setOtp] = useState("");
+  const [verificationId, setVerificationId] = useState("");
+  const [step, setStep] = useState(0);
+
+  const onCaptchVerify = () => {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(
+        auth,
+        "recaptcha-container",
+        {
+          size: "invisible",
+          callback: (response) => {
+            //allow sign in with signinWithPhoneNumber
+            requestOtp();
+          },
+          "expired-callback": () => {
+            // Response expired ask user to solve the recaptcha again
+            console.log("recaptcha error");
+          },
+        }
+      );
+    }
+  };
+
+  // Request OTP function
+  const requestOtp = () => {
+    onCaptchVerify();
+    const captchaVerifier = window.recaptchaVerifier;
+    const formatph = "++91" + phoneNumber;
+    console.log(formatph);
+    signInWithPhoneNumber(auth, formatph, captchaVerifier)
+      .then((confirmationResult) => {
+        window.confirmationResult = confirmationResult;
+        setVerificationId(confirmationResult.verificationId);
+        setStep(2);
+        toast.success("OTP sent successfully");
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  // Verify OTP function
+  const verifyOtp = () => {
+    if (!window.confirmationResult) {
+      console.log("No confirmation result found.");
+      return;
+    }
+    console.log(otp);
+    window.confirmationResult
+      .confirm(otp)
+      .then(async (res) => {
+        dispatch(
+          login({
+            name: res.user.displayName,
+            email: res.user.email,
+            phone: res.user.phoneNumber,
+          })
+        );
+        toast.success("success");
+        navigate("/");
+        console.log(res);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    setDivVisible(false);
+  };
+
   let navigate = useNavigate();
+  const dispatch = useDispatch();
   const handleSingin = () => {
     signInWithPopup(auth, provider)
       .then((res) => {
+        dispatch(
+          login({
+            name: res.user.displayName,
+            email: res.user.email,
+            photo: res.user.photoURL,
+          })
+        );
         console.log(res);
 
         navigate("/");
@@ -39,8 +124,9 @@ function Register() {
   return (
     <div>
       <div className="form">
-        <h1>Sing-up and Apply For Free</h1>
+        <h1>Sign-up and Apply For Free</h1>
         <p className="para3">1,50,000+ companies hiring on Internshala</p>
+        <div id="recaptcha-container"></div>
         <div className="regi">
           <div className="py-6">
             <div className="flex bg-white rounded-lg justify-center shadow-lg overflow-hidden mx-auto max-w-sm lg:max-w-4xl">
@@ -73,6 +159,27 @@ function Register() {
                     Sign in with Google
                   </h1>
                 </a>
+                <a
+                  onClick={() => setStep(1)}
+                  class="flex items-center h-9 justify-center mt-4 text-white rounded-lg shadow-md hover:bg-gray-100"
+                >
+                  <div class="px-4 py-3 cursor-pointer">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      fill="currentColor"
+                      class="bi bi-phone"
+                      viewBox="0 0 16 16"
+                    >
+                      <path d="M11 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM5 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z" />
+                      <path d="M8 14a1 1 0 1 0 0-2 1 1 0 0 0 0 2" />
+                    </svg>
+                  </div>
+                  <h1 class="cursor-pointer px-4 py-3 w-5/6 text-center text-xl text-gray-600 font-bold">
+                    Sign in with Phone
+                  </h1>
+                </a>
                 <div className="mt-4 flex items-center justify-between">
                   <span className="border-b w-1/5 lg:w1/4"></span>
                   <a
@@ -83,82 +190,126 @@ function Register() {
                   </a>
                   <span className="border-b w-1/5 lg:w1/4"></span>
                 </div>
-                <div className="mt-4">
-                  <label
-                    htmlFor="email"
-                    className="border-b text-gray-700 text-sm font-bold mb-2"
-                  >
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                    id="email"
-                  />
-                </div>
-                <div className="mt-4">
-                  <label
-                    htmlFor="password"
-                    className="border-b text-gray-700 text-sm font-bold mb-2"
-                  >
-                    Password
-                  </label>
-                  <input
-                    type="text"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                    id="password"
-                  />
-                </div>
-                <div className="mt-4 flex justify-between">
-                  <div>
-                    <label
-                      htmlFor="Fname"
-                      className="border-b text-gray-700 text-sm font-bold mb-2"
+                {step > 0 && (
+                  <>
+                    <div className="mt-4">
+                      <label className="block text-gray-700 text-sm font-bold mb-2">
+                        Phone Number
+                      </label>
+                      <input
+                        className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                        type="text"
+                        placeholder="Enter your phone number"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                      />
+                    </div>
+                    {step === 2 && (
+                      <div className="mt-4">
+                        <label className="block text-gray-700 text-sm font-bold mb-2">
+                          OTP
+                        </label>
+                        <input
+                          className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                          type="text"
+                          placeholder="Enter the OTP"
+                          value={otp}
+                          onChange={(e) => setOtp(e.target.value)}
+                        />
+                      </div>
+                    )}
+                    <div className="mt-8">
+                      <button
+                        className="btn3 bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600"
+                        onClick={step === 1 ? requestOtp : verifyOtp}
+                      >
+                        {step === 1 ? "Request OTP" : "Verify OTP"}
+                      </button>
+                    </div>
+                  </>
+                )}
+                {step === 0 && (
+                  <>
+                    <div className="mt-4">
+                      <label
+                        htmlFor="email"
+                        className="border-b text-gray-700 text-sm font-bold mb-2"
+                      >
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                        id="email"
+                      />
+                    </div>
+                    <div className="mt-4">
+                      <label
+                        htmlFor="password"
+                        className="border-b text-gray-700 text-sm font-bold mb-2"
+                      >
+                        Password
+                      </label>
+                      <input
+                        type="text"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                        id="password"
+                      />
+                    </div>
+                    <div className="mt-4 flex justify-between">
+                      <div>
+                        <label
+                          htmlFor="Fname"
+                          className="border-b text-gray-700 text-sm font-bold mb-2"
+                        >
+                          First Name
+                        </label>
+                        <input
+                          type="text"
+                          className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                          id="Fname"
+                          value={fname}
+                          onChange={(e) => setFname(e.target.value)}
+                        />
+                      </div>
+                      <div className="ml-5">
+                        <label
+                          htmlFor="Lname"
+                          className="border-b text-gray-700 text-sm font-bold mb-2"
+                        >
+                          Last Name
+                        </label>
+                        <input
+                          type="text"
+                          className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                          id="Lname"
+                          value={lname}
+                          onChange={(e) => setLname(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <small>
+                      By signing up, you agree to our{" "}
+                      <span className="text-blue-400">
+                        Term and Conditions.
+                      </span>
+                    </small>
+                    <button className="bg-blue-500 h-9 text-white font-bold py-2 mt-4 px-4 w-full rounded hover:bg-blue-600">
+                      Sign Up{" "}
+                    </button>
+                    Already registered?{" "}
+                    <span
+                      className="text-blue-400 cursor-pointer"
+                      onClick={showLogin}
                     >
-                      First Name
-                    </label>
-                    <input
-                      type="text"
-                      className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                      id="Fname"
-                      value={fname}
-                      onChange={(e) => setFname(e.target.value)}
-                    />
-                  </div>
-                  <div className="ml-5">
-                    <label
-                      htmlFor="Lname"
-                      className="border-b text-gray-700 text-sm font-bold mb-2"
-                    >
-                      Last Name
-                    </label>
-                    <input
-                      type="text"
-                      className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                      id="Lname"
-                      value={lname}
-                      onChange={(e) => setLname(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <small>
-                  By signing up, you agree to our{" "}
-                  <span className="text-blue-400">Term and Conditions.</span>
-                </small>
-                <button className="bg-blue-500 h-9 text-white font-bold py-2 mt-4 px-4 w-full rounded hover:bg-blue-600">
-                  Sing Up{" "}
-                </button>
-                Already registered?{" "}
-                <span
-                  className="text-blue-400 cursor-pointer"
-                  onClick={showLogin}
-                >
-                  Login
-                </span>
+                      Login
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -196,8 +347,7 @@ function Register() {
                     <div className="w-full p-8 lg:w-1/2">
                       <p
                         onClick={handleSingin}
-                        className="flex
- items-center h-9 justify-center mt-4 text-white bg-slate-100 rounded-lg hover:bg-gray-100"
+                        className="flex items-center h-9 justify-center mt-4 text-white bg-slate-100 rounded-lg hover:bg-gray-100"
                       >
                         <div className="px-4 py-3">
                           <svg class="h-6 w-6" viewBox="0 0 40 40">
@@ -219,7 +369,26 @@ function Register() {
                             />
                           </svg>
                         </div>
-                        <h1 className="text-gray-500">Login With Google</h1>
+                        <h4 className="text-gray-500">Login With Google</h4>
+                      </p>
+                      <p
+                        onClick={() => setStep(1)}
+                        className=" cursor-pointer flex items-center h-9 justify-center mt-4 text-white bg-slate-100 rounded-lg hover:bg-gray-100"
+                      >
+                        <div className="px-4 py-3 cursor-pointer">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            fill="currentColor"
+                            class="bi bi-phone"
+                            viewBox="0 0 16 16"
+                          >
+                            <path d="M11 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM5 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z" />
+                            <path d="M8 14a1 1 0 1 0 0-2 1 1 0 0 0 0 2" />
+                          </svg>
+                        </div>
+                        <h4 className="text-gray-500">Login With Phone</h4>
                       </p>
                       <div className="mt-4 flex items-center justify-between">
                         <span className="border-b- w-1/5 lg:w-1/4"></span>
@@ -229,7 +398,46 @@ function Register() {
                         </p>
                         <span className="border-b- w-1/5 lg:w-1/4"></span>
                       </div>
-                      <div class="mt-4">
+                      {step > 0 && (
+                        <>
+                          <div className="mt-4">
+                            <label className="block text-gray-700 text-sm font-bold mb-2">
+                              Phone Number
+                            </label>
+                            <input
+                              className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                              type="text"
+                              placeholder="Enter your phone number"
+                              value={phoneNumber}
+                              onChange={(e) => setPhoneNumber(e.target.value)}
+                            />
+                          </div>
+                          {step === 2 && (
+                            <div className="mt-4">
+                              <label className="block text-gray-700 text-sm font-bold mb-2">
+                                OTP
+                              </label>
+                              <input
+                                className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                                type="text"
+                                placeholder="Enter the OTP"
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value)}
+                              />
+                            </div>
+                          )}
+                          <div className="mt-8">
+                            <button
+                              className="btn3 bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600"
+                              onClick={step === 1 ? requestOtp : verifyOtp}
+                            >
+                              {step === 1 ? "Request OTP" : "Verify OTP"}
+                            </button>
+                          </div>
+                          
+                        </>
+                      )}
+                      {step === 0 && <><div class="mt-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2">
                           Email{" "}
                         </label>
@@ -258,7 +466,7 @@ function Register() {
                         <button className="btn3  bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600 ">
                           Login
                         </button>
-                      </div>
+                      </div></>}
 
                       <div className="mt-4 flex items-center justify-between">
                         <p className="text-sm">

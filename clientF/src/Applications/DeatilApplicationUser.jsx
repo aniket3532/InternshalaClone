@@ -37,7 +37,7 @@ console.log(data)
            
             </div>
             <h4 className=' mt-9'>Applied By</h4>
-     <p className='font-bold -mt-8'>{data.user.name}</p>
+     <p className='font-bold -mt-8'>{data.user.name ? data.user.name : data.user.phoneNumber}</p>
 
           </div>
       

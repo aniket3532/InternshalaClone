@@ -15,7 +15,7 @@ function Profile() {
    </div>
 <div className='p-2'>
 
-    <h3 className='text-center text-xl text-gray-900'>{user.name}</h3>
+    <h3 className='text-center text-xl text-gray-900'>{user.name ? user.name : user.phoneNumber}</h3>
 </div>
 <div className='text-xs my-3'>
 <h3 className='text-xl font-bold'>UID</h3>
