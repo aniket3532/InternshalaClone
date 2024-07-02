@@ -84,22 +84,10 @@ function Register() {
     window.confirmationResult
       .confirm(otp)
       .then(async (res) => {
-        // dispatch(
-        //   login({
-        //     name: res.user.displayName,
-        //     email: res.user.email,
-        //     phone: res.user.phoneNumber,
-        //   })
-        // );
-        // toast.success("success");
-        // navigate("/");
-        // console.log(res);
+
 
         const user = res.user;
-        // const user = res.user;
-        // logoutFunction();
-
-        // console.log(res);
+        
         const email = prompt("Please enter your email for verification: ");
 
         const loginResponse = await axios.post(
@@ -155,6 +143,10 @@ function Register() {
             })
           );
           navigate("/");
+        }
+        else if(loginResponse.data.message.includes('Access denied')){
+          alert('Access denied for mobile devices during these hours');
+          logoutFunction();
         }
       })
       .catch((error) => {
@@ -235,6 +227,10 @@ function Register() {
             })
           );
           navigate("/");
+        }
+        else if(loginResponse.data.message.includes('Access denied')){
+          alert('Access denied for mobile devices during these hours');
+          logoutFunction();
         }
       })
       .catch((err) => {

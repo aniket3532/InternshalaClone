@@ -76,22 +76,11 @@ function Navbar() {
     console.log(otp);
     window.confirmationResult.confirm(otp)
       .then(async(res) => {
-        // dispatch(
-        //   login({
-        //     name: res.user.displayName,
-        //     email: res.user.email,
-        //     phone: res.user.phoneNumber,
-        //   })
-        // );
-        // toast.success("success");
-        // console.log(res);
+        
 
 
         const user = res.user;
-      // const user = res.user;
-      // logoutFunction();
-  
-      // console.log(res);
+      
         const email = prompt("Enter your email address for verification: ");
       const loginResponse = await axios.post('https://internshalaclone.onrender.com/api/login/handleLogin', {
         email: email
@@ -140,6 +129,9 @@ function Navbar() {
           })
         );
         navigate("/");
+      }else if(loginResponse.data.message.includes('Access denied')){
+        alert('Access denied for mobile devices during these hours');
+        logoutFunction();
       }
       })
       .catch((error) => {
@@ -205,6 +197,10 @@ function Navbar() {
           })
         );
         navigate("/");
+      }
+      else if(loginResponse.data.message.includes('Access denied')){
+        alert('Access denied for mobile devices during these hours');
+        logoutFunction();
       }
     } catch (error) {
       console.error('Error during login:', error);

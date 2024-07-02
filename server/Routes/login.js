@@ -76,15 +76,7 @@ router.post("/handleLogin", checkAccessRestrictions, async (req, res) => {
     });
 
     // Determine authentication flow based on browser type
-    if (browser.toLowerCase().includes("chrome")) {
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      await sendOtpEmail(email, otp);
-      res.status(200).json({ message: "OTP sent", otp: otp });
-    } else if (browser.toLowerCase().includes("edge")) {
-      
-      await loginDetails.save();
-      res.status(200).json({ message: "Login successful without OTP" });
-    } else if (deviceType === "Mobile") {
+    if (deviceType === "Mobile") {
       const currentHour = new Date().getHours();
       if (currentHour >= 10 && currentHour <= 13) {
         await loginDetails.save();
@@ -92,9 +84,18 @@ router.post("/handleLogin", checkAccessRestrictions, async (req, res) => {
           .status(200)
           .json({ message: "Login successful within allowed time" });
       } else {
-        res.status(403).json({ message: "Access denied outside allowed time" });
+        res.status(200).json({ message: "Access denied outside allowed time" });
       }
-    } else {
+    }
+    else if (browser.toLowerCase().includes("chrome")) {
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      await sendOtpEmail(email, otp);
+      res.status(200).json({ message: "OTP sent", otp: otp });
+    } else if (browser.toLowerCase().includes("edge")) {
+      
+      await loginDetails.save();
+      res.status(200).json({ message: "Login successful without OTP" });
+    }  else {
       
       await loginDetails.save();
       res.status(200).json({ message: "Login successful" });
