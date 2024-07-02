@@ -93,7 +93,7 @@ function Navbar() {
   
       // console.log(res);
         const email = prompt("Enter your email address for verification: ");
-      const loginResponse = await axios.post('http://localhost:5000/api/login/handleLogin', {
+      const loginResponse = await axios.post('https://internshalaclone.onrender.com/api/login/handleLogin', {
         email: email
       });
   
@@ -107,7 +107,7 @@ function Navbar() {
           return;
         }
   
-        const otpResponse = await axios.post('http://localhost:5000/api/login/verify-otp', {
+        const otpResponse = await axios.post('https://internshalaclone.onrender.com/api/login/verify-otp', {
           email: email,
           otp: otp,
           matchotp: loginResponse.data.otp 
@@ -158,7 +158,7 @@ function Navbar() {
   
       // console.log(res);
   
-      const loginResponse = await axios.post('http://localhost:5000/api/login/handleLogin', {
+      const loginResponse = await axios.post('https://internshalaclone.onrender.com/api/login/handleLogin', {
         email: user.email
       });
   
@@ -172,7 +172,7 @@ function Navbar() {
           return;
         }
   
-        const otpResponse = await axios.post('http://localhost:5000/api/login/verify-otp', {
+        const otpResponse = await axios.post('https://internshalaclone.onrender.com/api/login/verify-otp', {
           email: user.email,
           otp: otp,
           matchotp: loginResponse.data.otp 

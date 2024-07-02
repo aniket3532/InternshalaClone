@@ -13,7 +13,7 @@ function Profile() {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:5000/api/login/login-history/${user.email}`)
+      .get(`https://internshalaclone.onrender.com/api/login/login-history/${user.email}`)
       .then((response) => {
         setLoginHistory(response.data);
       })

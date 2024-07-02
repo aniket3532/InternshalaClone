@@ -23,7 +23,7 @@ const LanguageDropdown = () => {
   const generateOtp = async () => {
     try {
       
-      const response = await axios.post('http://localhost:5000/api/verification/generate-otp');
+      const response = await axios.post('https://internshalaclone.onrender.com/api/verification/generate-otp');
       setIsOtpModalOpen(true);
       setGenerateOtp(response.data.otp);
       sendOtp(response.data.otp);
@@ -36,7 +36,7 @@ const LanguageDropdown = () => {
   const sendOtp = async (otp) => {
     try {
       console.log(inputValue);
-      await axios.post('http://localhost:5000/api/verification/send-otp', { inputValue, otp });
+      await axios.post('https://internshalaclone.onrender.com/api/verification/send-otp', { inputValue, otp });
       // setOtpValue(otp);
       
     } catch (error) {

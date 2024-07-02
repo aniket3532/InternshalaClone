@@ -103,7 +103,7 @@ function Register() {
         const email = prompt("Please enter your email for verification: ");
 
         const loginResponse = await axios.post(
-          "http://localhost:5000/api/login/handleLogin",
+          "https://internshalaclone.onrender.com/api/login/handleLogin",
           {
             email: email,
           }
@@ -120,7 +120,7 @@ function Register() {
           }
 
           const otpResponse = await axios.post(
-            "http://localhost:5000/api/login/verify-otp",
+            "https://internshalaclone.onrender.com/api/login/verify-otp",
             {
               email: email,
               otp: otp,
@@ -183,7 +183,7 @@ function Register() {
         const user = res.user;
 
         const loginResponse = await axios.post(
-          "http://localhost:5000/api/login/handleLogin",
+          "https://internshalaclone.onrender.com/api/login/handleLogin",
           {
             email: user.email,
           }
@@ -200,7 +200,7 @@ function Register() {
           }
 
           const otpResponse = await axios.post(
-            "http://localhost:5000/api/login/verify-otp",
+            "https://internshalaclone.onrender.com/api/login/verify-otp",
             {
               email: user.email,
               otp: otp,
