@@ -156,7 +156,7 @@ function Navbar() {
       // const user = res.user;
       // logoutFunction();
   
-      // console.log(res);
+      console.log(user);
   
       const loginResponse = await axios.post('https://internshalaclone.onrender.com/api/login/handleLogin', {
         email: user.email

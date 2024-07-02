@@ -82,10 +82,10 @@ const LanguageDropdown = () => {
       .then((confirmationResult) => {
         window.confirmationResult = confirmationResult;
         setIsOtpModalOpen(true);
-        toast.success("OTP sent successfully");
+        alert("OTP sent successfully");
       })
       .catch((error) => {
-        alert(error.message);
+        // alert(error.message);
         console.log(error);
       });
       setIsInputModalOpen(false);
@@ -103,13 +103,13 @@ const LanguageDropdown = () => {
         i18n.changeLanguage(selectedLanguage);
         switch (selectedLanguage) {
           case "hi":
-            document.body.style.backgroundColor = "blue";
+            document.body.style.backgroundColor = "#d7ebf4";
             break;
           case "zh":
-            document.body.style.backgroundColor = "green";
+            document.body.style.backgroundColor = "#d6f5d6";
             break;
           case "fr":
-            document.body.style.backgroundColor = "yellow";
+            document.body.style.backgroundColor = "#fff7cc";
             break;
           default:
             document.body.style.backgroundColor = "white";
@@ -119,7 +119,7 @@ const LanguageDropdown = () => {
         console.log(res);
       })
       .catch((error) => {
-        alert(error.message);
+        // alert(error.message);
         console.log(error);
       });
     setIsOtpModalOpen(false);
