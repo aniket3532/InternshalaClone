@@ -10,7 +10,7 @@ import InternDeatil from "./Components/Internships/InternDeatil";
 import Register from "./Components/auth/Register";
 import { useDispatch, useSelector } from "react-redux";
 import { login, logout, selectUser } from "./Feature/Userslice";
-import { auth } from "./Firebase/firebase";
+// import { auth } from "../../Firebase/firebase";
 import { Profiler, useEffect } from "react";
 import Profile from "./Components/profile/Profile";
 import AdminLogin from "./Admin/AdminLogin";
@@ -21,6 +21,7 @@ import PostJOb from "./Admin/PostJob";
 import DeatilApplication from "./Applications/DeatilApplication";
 import DeatilApplicationUser from "./Applications/DeatilApplicationUser";
 import UserApplicatiom from "./Components/profile/UserApplicatiom";
+import { auth } from "../src/Firebase/firebase";
 
 function App() {
 
