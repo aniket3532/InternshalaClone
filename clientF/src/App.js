@@ -21,7 +21,6 @@ import PostJOb from "./Admin/PostJob";
 import DeatilApplication from "./Applications/DeatilApplication";
 import DeatilApplicationUser from "./Applications/DeatilApplicationUser";
 import UserApplicatiom from "./Components/profile/UserApplicatiom";
-import PhoneAuth from "./Components/auth/phoneAuth";
 
 function App() {
 
@@ -66,7 +65,6 @@ function App() {
         <Route path='/UserapplicationDetail' element={< DeatilApplicationUser/>}/>
         <Route path='/userapplication' element={<UserApplicatiom/>}/>
 
-        <Route path='/phoneauth' element={<PhoneAuth/>}/>
 
       </Routes>
       <Footer />

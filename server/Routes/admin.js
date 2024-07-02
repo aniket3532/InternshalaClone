@@ -12,7 +12,7 @@ router.post("/adminLogin", (req,res)=>{
         res.send("Admin is here")
     }
     else{
-        res.statusCode(401).send("Unauthrized")
+        res.statusCode(401).send("Unauthorized")
     }
 })
 module.exports=router

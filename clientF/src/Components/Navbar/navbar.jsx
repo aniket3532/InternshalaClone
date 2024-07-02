@@ -9,6 +9,9 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { login, logout, selectUser } from "../../Feature/Userslice";
 import { toast } from "react-toastify";
+import LanguageDropdown from "./languageDropdown";
+import axios from "axios";
+import { useTranslation } from "react-i18next";
 function Navbar() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -24,6 +27,8 @@ function Navbar() {
   const [otp, setOtp] = useState("");
   const [verificationId, setVerificationId] = useState("");
   const [step, setStep] = useState(0);
+
+  const {t} = useTranslation();
 
 
   const onCaptchVerify = () => {
@@ -56,12 +61,13 @@ function Navbar() {
         toast.success("OTP sent successfully");
       })
       .catch((error) => {
+        alert(error.message);
         console.log(error);
       });
   };
 
   // Verify OTP function
-  const verifyOtp = () => {
+  const verifyOtp = async() => {
 
     if (!window.confirmationResult) {
       console.log("No confirmation result found.");
@@ -70,38 +76,143 @@ function Navbar() {
     console.log(otp);
     window.confirmationResult.confirm(otp)
       .then(async(res) => {
+        // dispatch(
+        //   login({
+        //     name: res.user.displayName,
+        //     email: res.user.email,
+        //     phone: res.user.phoneNumber,
+        //   })
+        // );
+        // toast.success("success");
+        // console.log(res);
+
+
+        const user = res.user;
+      // const user = res.user;
+      // logoutFunction();
+  
+      // console.log(res);
+        const email = prompt("Enter your email address for verification: ");
+      const loginResponse = await axios.post('http://localhost:5000/api/login/handleLogin', {
+        email: email
+      });
+  
+      console.log(loginResponse.data);
+  
+      if (loginResponse.data.message.includes('OTP sent')) {
+        // Handle OTP verification
+        const otp = prompt("Enter the OTP sent to your email:");
+        if (!otp) {
+          alert("OTP input cancelled.");
+          return;
+        }
+  
+        const otpResponse = await axios.post('http://localhost:5000/api/login/verify-otp', {
+          email: email,
+          otp: otp,
+          matchotp: loginResponse.data.otp 
+        });
+        console.log(`here it is br0, ${otpResponse.data}`);
+        if (otpResponse.data === 'OTP verified. Login successful.') {
+          // const res = await signInWithPopup(auth, provider);
+          // const user = res.user;
+          dispatch(
+            login({
+              name: user.displayName,
+              email: email,
+              phone: user.phoneNumber,
+            })
+          );
+          navigate("/");
+        } else {
+          alert("OTP verification failed.");
+          logoutFunction();
+          setDivVisibleFrologin(false);
+        }
+      } else if (loginResponse.data.message.includes('Login successful')) {
+        // const res = await signInWithPopup(auth, provider);
+        // const user = res.user;
         dispatch(
           login({
-            name: res.user.displayName,
-            email: res.user.email,
-            phone: res.user.phoneNumber,
+            name: user.displayName,
+            email: email,
+            phone: user.phoneNumber,
           })
         );
-        toast.success("success");
-        console.log(res);
+        navigate("/");
+      }
       })
       .catch((error) => {
+        alert(error.message);
         console.log(error);
       });
     setDivVisibleFrologin(false);
   };
 
-  const loginFunction = () => {
-    signInWithPopup(auth, provider)
-      .then((res) => {
+  const loginFunction = async () => {
+    try {
+      const res = await signInWithPopup(auth, provider);
+      const user = res.user;
+      // const user = res.user;
+      // logoutFunction();
+  
+      // console.log(res);
+  
+      const loginResponse = await axios.post('http://localhost:5000/api/login/handleLogin', {
+        email: user.email
+      });
+  
+      console.log(loginResponse.data);
+  
+      if (loginResponse.data.message.includes('OTP sent')) {
+        // Handle OTP verification
+        const otp = prompt("Enter the OTP sent to your email:");
+        if (!otp) {
+          alert("OTP input cancelled.");
+          return;
+        }
+  
+        const otpResponse = await axios.post('http://localhost:5000/api/login/verify-otp', {
+          email: user.email,
+          otp: otp,
+          matchotp: loginResponse.data.otp 
+        });
+        console.log(`here it is br0, ${otpResponse.data}`);
+        if (otpResponse.data === 'OTP verified. Login successful.') {
+          // const res = await signInWithPopup(auth, provider);
+          // const user = res.user;
+          dispatch(
+            login({
+              name: user.displayName,
+              email: user.email,
+              photo: user.photoURL,
+            })
+          );
+          navigate("/");
+        } else {
+          alert("OTP verification failed.");
+          logoutFunction();
+          setDivVisibleFrologin(false);
+        }
+      } else if (loginResponse.data.message.includes('Login successful')) {
+        // const res = await signInWithPopup(auth, provider);
+        // const user = res.user;
         dispatch(
           login({
-            name: res.user.displayName,
-            email: res.user.email,
-            photo: res.user.photoURL,
+            name: user.displayName,
+            email: user.email,
+            photo: user.photoURL,
           })
         );
-        console.log(res);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-    setDivVisibleFrologin(false);
+        navigate("/");
+      }
+    } catch (error) {
+      console.error('Error during login:', error);
+      // logoutFunction();
+      // alert("An error occurred during login. Please try again.");
+    } finally {
+      setDivVisibleFrologin(false);
+    }
   };
 
   const showLogin = () => {
@@ -143,11 +254,13 @@ function Navbar() {
     setDivVisibleFroJob(false);
   };
 
-  const logoutFunction = () => {
-    signOut(auth)
+  const logoutFunction = async () => {
+    navigate("/");
+    await signOut(auth)
       .then(() => {
+        
         dispatch(logout());
-        navigate("/");
+        
       })
       .catch((err) => {
         console.log(err);
@@ -160,7 +273,7 @@ function Navbar() {
         <ul>
           <div className="img">
             <Link to={"/"}>
-              <img src={logo} alt="" srcset="" />
+              <img src={logo} alt="" srcSet="" />
             </Link>
           </div>
           <div className="elem">
@@ -168,18 +281,18 @@ function Navbar() {
               {" "}
               <p id="int" className="" onMouseEnter={showInternShips}>
                 {" "}
-                Internships{" "}
+                {t("internships")}{" "}
                 <i
                   onClick={hideInternShips}
                   id="ico"
-                  class="bi bi-caret-down-fill"
+                  className="bi bi-caret-down-fill"
                 ></i>
               </p>
             </Link>
             <Link to={"/Jobs"}>
               {" "}
               <p onMouseEnter={showJobs}>
-                Jobs{" "}
+                {t("jobs")}{" "}
                 <i
                   class="bi bi-caret-down-fill"
                   id="ico2"
@@ -192,6 +305,7 @@ function Navbar() {
             <i class="bi bi-search"></i>
             <input type="text" placeholder="Search" />
           </div>
+          <div className="language mt-5"><LanguageDropdown /></div>
           {user ? (
             <>
               <div className="Profile">
@@ -215,11 +329,11 @@ function Navbar() {
             <>
               <div className="auth">
                 <button className="btn1" onClick={showLogin}>
-                  Login
+                  {t("login")}
                 </button>
 
                 <button className="btn2">
-                  <Link to="/register">Register</Link>
+                  <Link to="/register">{t("register")}</Link>
                 </button>
               </div>
             </>
@@ -227,56 +341,59 @@ function Navbar() {
           {user ? (
             <>
               <button className="bt-log" id="bt" onClick={logoutFunction}>
-                Logout <i class="bi bi-box-arrow-right"></i>
+                {t("logout")} <i class="bi bi-box-arrow-right"></i>
               </button>
             </>
           ) : (
             <>
-              <div className="flex mt-7 hire">Hire Talent</div>
-
+              <div className="flex mt-7 hire">{t("hire_talent")}</div>
+              <Link to={"/adminLogin"}>
               <div className="admin">
-                <Link to={"/adminLogin"}>
-                  <button>Admin</button>{" "}
-                </Link>
+              
+                
+                  <button>{t("admin")}</button>{" "}
+                
               </div>
+              </Link>
             </>
           )}
         </ul>
+        
       </nav>
       <div id="recaptcha-container"></div>
       {isDivVisibleForintern && (
         <div className="profile-dropdown-2">
           <div className="left-section">
-            <p>Top Locations</p>
-            <p>Profile</p>
-            <p>Top Category</p>
-            <p>Explore More Internships</p>
+            <p>{t("top_locations")}</p>
+            <p>{t("profile")}</p>
+            <p>{t("top_category")}</p>
+            <p>{t("explore_more_internships")}</p>
           </div>
           <div className="line flex bg-slate-400"></div>
           <div className="right-section">
-            <p>Intern at India</p>
-            <p>Intern at India</p>
-            <p>Intern at India</p>
-            <p>Intern at India</p>
-            <p>Intern at India</p>
+            <p>{t("intern_at_india")}</p>
+            <p>{t("intern_at_india")}</p>
+            <p>{t("intern_at_india")}</p>
+            <p>{t("intern_at_india")}</p>
+            <p>{t("intern_at_india")}</p>
           </div>
         </div>
       )}
       {isDivVisibleForJob && (
         <div className="profile-dropdown-1">
           <div className="left-section">
-            <p>Top Locations</p>
-            <p>Profile</p>
-            <p>Top Category</p>
-            <p>Explore More Internships</p>
+            <p>{t("top_locations")}</p>
+            <p>{t("profile")}</p>
+            <p>{t("top_category")}</p>
+            <p>{t("explore_more_internships")}</p>
           </div>
           <div className="line flex bg-slate-400"></div>
           <div className="right-section">
-            <p>Intern at India</p>
-            <p>Intern at India</p>
-            <p>Intern at India</p>
-            <p>Intern at India</p>
-            <p>Intern at India</p>
+            <p>{t("intern_at_india")}</p>
+            <p>{t("intern_at_india")}</p>
+            <p>{t("intern_at_india")}</p>
+            <p>{t("intern_at_india")}</p>
+            <p>{t("intern_at_india")}</p>
           </div>
         </div>
       )}
@@ -293,7 +410,7 @@ function Navbar() {
                 className={`auth-tab ${isStudent ? "active" : ""}`}
                 onClick={setFalseForStudent}
               >
-                Student
+                {t("student")}
               </span>
               &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
               <span
@@ -302,7 +419,7 @@ function Navbar() {
                 className={`auth-tab ${isStudent ? "active" : ""}`}
                 onClick={setTrueForStudent}
               >
-                Employee andT&P
+                {t("employee_and_tp")}
               </span>
             </h5>
             {isStudent ? (
@@ -334,7 +451,7 @@ function Navbar() {
                             />
                           </svg>
                         </div>
-                        <h4 className="text-gray-500">Login With Google</h4>
+                        <h4 className="text-gray-500">{t("login_with_google")}</h4>
                       </p>
                       <p
                         onClick={() => setStep(1)}
@@ -353,13 +470,13 @@ function Navbar() {
                             <path d="M8 14a1 1 0 1 0 0-2 1 1 0 0 0 0 2" />
                           </svg>
                         </div>
-                        <h4 className="text-gray-500">Login With Phone</h4>
+                        <h4 className="text-gray-500">{t("login_with_phone")}</h4>
                       </p>
                       <div className="mt-4 flex items-center justify-between">
                         <span className="border-b- w-1/5 lg:w-1/4"></span>
                         <p className="text-gray-500 text sm font-bold mb-2">
                           {" "}
-                          or
+                          {t("or")}
                         </p>
                         <span className="border-b- w-1/5 lg:w-1/4"></span>
                       </div>
@@ -368,7 +485,7 @@ function Navbar() {
                         <>
                           <div className="mt-4">
                             <label className="block text-gray-700 text-sm font-bold mb-2">
-                              Phone Number
+                             {t("phone_number")}
                             </label>
                             <input
                               className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
@@ -381,7 +498,7 @@ function Navbar() {
                           {step === 2 && (
                             <div className="mt-4">
                               <label className="block text-gray-700 text-sm font-bold mb-2">
-                                OTP
+                                {t("otp")}
                               </label>
                               <input
                                 className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
@@ -397,7 +514,7 @@ function Navbar() {
                               className="btn3 bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600"
                               onClick={step === 1 ? requestOtp : verifyOtp}
                             >
-                              {step === 1 ? "Request OTP" : "Verify OTP"}
+                              {step === 1 ? t("request_otp") : t("verify_otp")}
                             </button>
                           </div>
                           
@@ -407,7 +524,7 @@ function Navbar() {
                         <>
                           <div class="mt-4">
                             <label class="block text-gray-700 text-sm font-bold mb-2">
-                              Email{" "}
+                              {t("email")}{" "}
                             </label>
                             <input
                               class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
@@ -418,10 +535,10 @@ function Navbar() {
                           <div class="mt-4">
                             <div class="flex justify-between">
                               <label class="block text-gray-700 text-sm font-bold mb-2">
-                                Password
+                                {t("password")}
                               </label>
                               <a href="/" class="text-xs text-blue-500">
-                                Forget Password?
+                                {t("forget_password")}
                               </a>
                             </div>
                             <input
@@ -432,7 +549,7 @@ function Navbar() {
                           </div>
                           <div className="mt-8">
                             <button className="btn3  bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600 ">
-                              Login
+                              {t("login")}
                             </button>
                           </div>
                         </>
@@ -440,19 +557,19 @@ function Navbar() {
 
                       <div className="mt-4 flex items-center justify-between">
                         <p className="text-sm">
-                          new to internarea? Register(
+                         {t("new_to_internarea")}(
                           <span
                             className="text-blue-500 cursor-pointer"
                             onClick={closeLogin}
                           >
-                            Student
+                            {t("student")}
                           </span>
                           /
                           <span
                             className="text-blue-500 cursor-pointer"
                             onClick={closeLogin}
                           >
-                            company
+                            {t("company")}
                           </span>
                           ){" "}
                         </p>
@@ -467,7 +584,7 @@ function Navbar() {
                   <div className="w-full p-8 lg:w-1/2">
                     <div class="mt-4">
                       <label class="block text-gray-700 text-sm font-bold mb-2">
-                        Email{" "}
+                        {t("email")}{" "}
                       </label>
                       <input
                         class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
@@ -478,10 +595,10 @@ function Navbar() {
                     <div class="mt-4">
                       <div class="flex justify-between">
                         <label class="block text-gray-700 text-sm font-bold mb-2">
-                          Password
+                          {t("password")}
                         </label>
                         <a href="/" class="text-xs text-blue-500">
-                          Forget Password?
+                          {t("forget_password")}
                         </a>
                       </div>
                       <input
@@ -492,25 +609,25 @@ function Navbar() {
                     </div>
                     <div className="mt-8">
                       <button className="btn3  bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600 ">
-                        Login
+                        {t("login")}
                       </button>
                     </div>
 
                     <div className="mt-4 flex items-center justify-between">
                       <p className="text-sm">
-                        new to internarea? Register(
+                        {t("new_to_internarea")}(
                         <span
                           className="text-blue-500 cursor-pointer"
                           onClick={closeLogin}
                         >
-                          Student
+                          {t("student")}
                         </span>
                         /
                         <span
                           className="text-blue-500 cursor-pointer"
                           onClick={closeLogin}
                         >
-                          company
+                          {t("company")}
                         </span>
                         ){" "}
                       </p>
@@ -528,6 +645,7 @@ function Navbar() {
           </div>
         )}
       </div>
+  
       <Sidebar />
     </div>
   );

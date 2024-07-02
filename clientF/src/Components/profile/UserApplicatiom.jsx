@@ -4,6 +4,7 @@ import "./user.css";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../Feature/Userslice";
+import { useTranslation } from "react-i18next";
 
 function UserApplicatiom() {
   const [application, setApplication] = useState([]);
@@ -11,6 +12,7 @@ function UserApplicatiom() {
   const userapplication = application.filter(
     (app) => app.user?.name === user.name
   );
+  const {t}=useTranslation();
   useEffect(() => {
     const fetchApplication = async () => {
       try {
@@ -28,7 +30,7 @@ function UserApplicatiom() {
   return (
     <div>
       <div className="hide">
-        <h1 className="text-3xl font-semibold mt-3">Total Applications</h1>
+        <h1 className="text-3xl font-semibold mt-3">{t("total_applications")}</h1>
         <div className="flex justify-center " id="tabel">
           <div className="applications flex flex-col mt-7">
             <div className="overflow-x-auto sm:-mx-6 lg:mx-8">
@@ -36,22 +38,22 @@ function UserApplicatiom() {
                 <thead className="border-b font-medium">
                   <tr className="bg-gray-200">
                     <th scope="col" className="px-5 py-4">
-                      Company
+                      {t("company")}
                     </th>
                     <th scope="col" className="px-5 py-4">
-                      Category
+                      {t("category")}
                     </th>
                     <th scope="col" className="px-5 py-4">
-                      Applied On
+                      {t("applied_on")}
                     </th>
                     <th scope="col" className="px-5 py-4">
-                      Applied By
+                      {t("applied_by")}
                     </th>
                     <th scope="col" className="px-5 py-4">
-                      View Detail
+                      {t("view_details")}
                     </th>
                     <th scope="col" className="px-5 py-4">
-                      Application Status
+                      {t("application_status")}
                     </th>
                   </tr>
                 </thead>
@@ -90,7 +92,7 @@ function UserApplicatiom() {
       </div>
 
       <div className="show">
-        <h1>View All Applications</h1>
+        <h1>{t("view_all_applications")}</h1>
         {userapplication.map((data) => (
           <section class="text-gray-600 body-font">
             <div class="container px-5 py-2 mx-auto flex flex-wrap">
@@ -113,26 +115,26 @@ function UserApplicatiom() {
                     <div class="flex-grow">
                       <h2 class="text-gray-900 text-lg title-font font-medium mb-3">
                         {" "}
-                        company name {data.company}
+                        {t("company_name")} {data.company}
                       </h2>
                       <p class="leading-relaxed text-base">
                         {" "}
-                        Applied by {data.user.name ? data.user.name : data.user.phoneNumber}
+                        {t("applied_by")} {data.user.name ? data.user.name : data.user.phoneNumber}
                       </p>
                       <p class="leading-relaxed text-base">
                         {" "}
-                        Applied on{" "}
+                        {t("applied_on")}{" "}
                         {new Date(data?.createAt).toLocaleDateString()}
                       </p>
                       <p class="leading-relaxed text-base">
                         {" "}
-                        Application status {data.status}
+                        {t("application_status")} {data.status}
                       </p>
                       <Link
                         to={`/UserapplicationDetail?a=${data._id}`}
                         class="mt-3 text-indigo-500 inline-flex items-center"
                       >
-                        View in deatil
+                        {t("view_detail")}
                         <i class="bi bi-chevron-compact-right text-blue-500"></i>
                       </Link>
                     </div>

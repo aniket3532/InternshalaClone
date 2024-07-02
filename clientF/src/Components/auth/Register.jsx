@@ -1,14 +1,13 @@
 import React, { useState } from "react";
-import {
-  RecaptchaVerifier,
-  signInWithPopup,
-} from "firebase/auth";
+import { RecaptchaVerifier, signInWithPopup, signOut } from "firebase/auth";
 import "./register.css";
 import { auth, provider, signInWithPhoneNumber } from "../../Firebase/firebase";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
-import { login } from "../../Feature/Userslice";
+import { login, logout } from "../../Feature/Userslice";
+import axios from "axios";
+import { useTranslation } from "react-i18next";
 function Register() {
   const [isStudent, setStudent] = useState(true);
   const [isDivVisible, setDivVisible] = useState(false);
@@ -22,6 +21,19 @@ function Register() {
   const [otp, setOtp] = useState("");
   const [verificationId, setVerificationId] = useState("");
   const [step, setStep] = useState(0);
+
+  const { t } = useTranslation();
+
+  const logoutFunction = async () => {
+    navigate("/");
+    await signOut(auth)
+      .then(() => {
+        dispatch(logout());
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
 
   const onCaptchVerify = () => {
     if (!window.recaptchaVerifier) {
@@ -57,6 +69,7 @@ function Register() {
         toast.success("OTP sent successfully");
       })
       .catch((error) => {
+        // alert(error.message);
         console.log(error);
       });
   };
@@ -71,18 +84,81 @@ function Register() {
     window.confirmationResult
       .confirm(otp)
       .then(async (res) => {
-        dispatch(
-          login({
-            name: res.user.displayName,
-            email: res.user.email,
-            phone: res.user.phoneNumber,
-          })
+        // dispatch(
+        //   login({
+        //     name: res.user.displayName,
+        //     email: res.user.email,
+        //     phone: res.user.phoneNumber,
+        //   })
+        // );
+        // toast.success("success");
+        // navigate("/");
+        // console.log(res);
+
+        const user = res.user;
+        // const user = res.user;
+        // logoutFunction();
+
+        // console.log(res);
+        const email = prompt("Please enter your email for verification: ");
+
+        const loginResponse = await axios.post(
+          "http://localhost:5000/api/login/handleLogin",
+          {
+            email: email,
+          }
         );
-        toast.success("success");
-        navigate("/");
-        console.log(res);
+
+        console.log(loginResponse.data);
+
+        if (loginResponse.data.message.includes("OTP sent")) {
+          // Handle OTP verification
+          const otp = prompt("Enter the OTP sent to your email:");
+          if (!otp) {
+            alert("OTP input cancelled.");
+            return;
+          }
+
+          const otpResponse = await axios.post(
+            "http://localhost:5000/api/login/verify-otp",
+            {
+              email: email,
+              otp: otp,
+              matchotp: loginResponse.data.otp,
+            }
+          );
+          console.log(`here it is br0, ${otpResponse.data}`);
+          if (otpResponse.data === "OTP verified. Login successful.") {
+            // const res = await signInWithPopup(auth, provider);
+            // const user = res.user;
+            dispatch(
+              login({
+                name: user.displayName,
+                email: email,
+                phone: user.phoneNumber,
+              })
+            );
+            navigate("/");
+          } else {
+            alert("OTP verification failed.");
+            logoutFunction();
+            // setDivVisibleFrologin(false);
+          }
+        } else if (loginResponse.data.message.includes("Login successful")) {
+          // const res = await signInWithPopup(auth, provider);
+          // const user = res.user;
+          dispatch(
+            login({
+              name: user.displayName,
+              email: email,
+              phone: user.phoneNumber,
+            })
+          );
+          navigate("/");
+        }
       })
       .catch((error) => {
+        alert(error.message);
         console.log(error);
       });
     setDivVisible(false);
@@ -90,19 +166,76 @@ function Register() {
 
   let navigate = useNavigate();
   const dispatch = useDispatch();
-  const handleSingin = () => {
+  const handleSingin = async () => {
     signInWithPopup(auth, provider)
-      .then((res) => {
-        dispatch(
-          login({
-            name: res.user.displayName,
-            email: res.user.email,
-            photo: res.user.photoURL,
-          })
-        );
-        console.log(res);
+      .then(async (res) => {
+        // dispatch(
+        //   login({
+        //     name: res.user.displayName,
+        //     email: res.user.email,
+        //     photo: res.user.photoURL,
+        //   })
+        // );
+        // console.log(res);
 
-        navigate("/");
+        // navigate("/");
+
+        const user = res.user;
+
+        const loginResponse = await axios.post(
+          "http://localhost:5000/api/login/handleLogin",
+          {
+            email: user.email,
+          }
+        );
+
+        console.log(loginResponse.data);
+
+        if (loginResponse.data.message.includes("OTP sent")) {
+          // Handle OTP verification
+          const otp = prompt("Enter the OTP sent to your email:");
+          if (!otp) {
+            alert("OTP input cancelled.");
+            return;
+          }
+
+          const otpResponse = await axios.post(
+            "http://localhost:5000/api/login/verify-otp",
+            {
+              email: user.email,
+              otp: otp,
+              matchotp: loginResponse.data.otp,
+            }
+          );
+          console.log(`here it is br0, ${otpResponse.data}`);
+          if (otpResponse.data === "OTP verified. Login successful.") {
+            // const res = await signInWithPopup(auth, provider);
+            // const user = res.user;
+            dispatch(
+              login({
+                name: user.displayName,
+                email: user.email,
+                photo: user.photoURL,
+              })
+            );
+            navigate("/");
+          } else {
+            alert("OTP verification failed.");
+            logoutFunction();
+            // setDivVisibleFrologin(false);
+          }
+        } else if (loginResponse.data.message.includes("Login successful")) {
+          // const res = await signInWithPopup(auth, provider);
+          // const user = res.user;
+          dispatch(
+            login({
+              name: user.displayName,
+              email: user.email,
+              photo: user.photoURL,
+            })
+          );
+          navigate("/");
+        }
       })
       .catch((err) => {
         console.log(err);
@@ -124,8 +257,8 @@ function Register() {
   return (
     <div>
       <div className="form">
-        <h1>Sign-up and Apply For Free</h1>
-        <p className="para3">1,50,000+ companies hiring on Internshala</p>
+        <h1>{t("sign_up_and_apply_for_free")}</h1>
+        <p className="para3">{t("companies_hiring")}</p>
         <div id="recaptcha-container"></div>
         <div className="regi">
           <div className="py-6">
@@ -156,7 +289,7 @@ function Register() {
                     </svg>
                   </div>
                   <h1 class="cursor-pointer px-4 py-3 w-5/6 text-center text-xl text-gray-600 font-bold">
-                    Sign in with Google
+                    {t("sign_in_with_google")}
                   </h1>
                 </a>
                 <a
@@ -177,7 +310,7 @@ function Register() {
                     </svg>
                   </div>
                   <h1 class="cursor-pointer px-4 py-3 w-5/6 text-center text-xl text-gray-600 font-bold">
-                    Sign in with Phone
+                    {t("sign_in_with_phone")}
                   </h1>
                 </a>
                 <div className="mt-4 flex items-center justify-between">
@@ -186,7 +319,7 @@ function Register() {
                     href="/"
                     className="text-xs text-center text-gray-500 uppercase"
                   >
-                    or
+                    {t("or")}
                   </a>
                   <span className="border-b w-1/5 lg:w1/4"></span>
                 </div>
@@ -194,7 +327,7 @@ function Register() {
                   <>
                     <div className="mt-4">
                       <label className="block text-gray-700 text-sm font-bold mb-2">
-                        Phone Number
+                        {t("phone_number")}
                       </label>
                       <input
                         className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
@@ -207,7 +340,7 @@ function Register() {
                     {step === 2 && (
                       <div className="mt-4">
                         <label className="block text-gray-700 text-sm font-bold mb-2">
-                          OTP
+                          {t("otp")}
                         </label>
                         <input
                           className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
@@ -223,7 +356,7 @@ function Register() {
                         className="btn3 bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600"
                         onClick={step === 1 ? requestOtp : verifyOtp}
                       >
-                        {step === 1 ? "Request OTP" : "Verify OTP"}
+                        {step === 1 ? t("request_otp") : t("verify_otp")}
                       </button>
                     </div>
                   </>
@@ -235,7 +368,7 @@ function Register() {
                         htmlFor="email"
                         className="border-b text-gray-700 text-sm font-bold mb-2"
                       >
-                        Email
+                        {t("email")}
                       </label>
                       <input
                         type="email"
@@ -250,7 +383,7 @@ function Register() {
                         htmlFor="password"
                         className="border-b text-gray-700 text-sm font-bold mb-2"
                       >
-                        Password
+                        {t("password")}
                       </label>
                       <input
                         type="text"
@@ -266,7 +399,7 @@ function Register() {
                           htmlFor="Fname"
                           className="border-b text-gray-700 text-sm font-bold mb-2"
                         >
-                          First Name
+                          {t("first_name")}
                         </label>
                         <input
                           type="text"
@@ -281,7 +414,7 @@ function Register() {
                           htmlFor="Lname"
                           className="border-b text-gray-700 text-sm font-bold mb-2"
                         >
-                          Last Name
+                          {t("last_name")}
                         </label>
                         <input
                           type="text"
@@ -293,20 +426,20 @@ function Register() {
                       </div>
                     </div>
                     <small>
-                      By signing up, you agree to our{" "}
+                      {t("agree_terms")}{" "}
                       <span className="text-blue-400">
-                        Term and Conditions.
+                        {t("terms_and_conditions")}
                       </span>
                     </small>
                     <button className="bg-blue-500 h-9 text-white font-bold py-2 mt-4 px-4 w-full rounded hover:bg-blue-600">
-                      Sign Up{" "}
+                      {t("sign_up")}{" "}
                     </button>
-                    Already registered?{" "}
+                    {t("already_registered")}{" "}
                     <span
                       className="text-blue-400 cursor-pointer"
                       onClick={showLogin}
                     >
-                      Login
+                      {t("login")}
                     </span>
                   </>
                 )}
@@ -328,7 +461,7 @@ function Register() {
                 className={`auth-tab ${isStudent ? "active" : ""}`}
                 onClick={setFalseForStudent}
               >
-                Student
+                {t("student")}
               </span>
               &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
               <span
@@ -337,7 +470,7 @@ function Register() {
                 className={`auth-tab ${isStudent ? "active" : ""}`}
                 onClick={setTrueForStudent}
               >
-                Employee andT&P
+                {t("employee_and_tp")}
               </span>
             </h5>
             {isStudent ? (
@@ -369,7 +502,7 @@ function Register() {
                             />
                           </svg>
                         </div>
-                        <h4 className="text-gray-500">Login With Google</h4>
+                        <h4 className="text-gray-500">{t("login_with_google")}</h4>
                       </p>
                       <p
                         onClick={() => setStep(1)}
@@ -388,13 +521,13 @@ function Register() {
                             <path d="M8 14a1 1 0 1 0 0-2 1 1 0 0 0 0 2" />
                           </svg>
                         </div>
-                        <h4 className="text-gray-500">Login With Phone</h4>
+                        <h4 className="text-gray-500">{t("login_with_phone")}</h4>
                       </p>
                       <div className="mt-4 flex items-center justify-between">
                         <span className="border-b- w-1/5 lg:w-1/4"></span>
                         <p className="text-gray-500 text sm font-bold mb-2">
                           {" "}
-                          or
+                          {t("or")}
                         </p>
                         <span className="border-b- w-1/5 lg:w-1/4"></span>
                       </div>
@@ -402,7 +535,7 @@ function Register() {
                         <>
                           <div className="mt-4">
                             <label className="block text-gray-700 text-sm font-bold mb-2">
-                              Phone Number
+                              {t("phone_number")}
                             </label>
                             <input
                               className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
@@ -415,7 +548,7 @@ function Register() {
                           {step === 2 && (
                             <div className="mt-4">
                               <label className="block text-gray-700 text-sm font-bold mb-2">
-                                OTP
+                                {t("otp")}
                               </label>
                               <input
                                 className="text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
@@ -431,58 +564,61 @@ function Register() {
                               className="btn3 bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600"
                               onClick={step === 1 ? requestOtp : verifyOtp}
                             >
-                              {step === 1 ? "Request OTP" : "Verify OTP"}
+                              {step === 1 ? t("request_otp") : t("verify_otp")}
                             </button>
                           </div>
-                          
                         </>
                       )}
-                      {step === 0 && <><div class="mt-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">
-                          Email{" "}
-                        </label>
-                        <input
-                          class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                          type="email"
-                          placeholder="john@example.com"
-                        />
-                      </div>
-                      <div class="mt-4">
-                        <div class="flex justify-between">
-                          <label class="block text-gray-700 text-sm font-bold mb-2">
-                            Password
-                          </label>
-                          <a href="/" class="text-xs text-blue-500">
-                            Forget Password?
-                          </a>
-                        </div>
-                        <input
-                          class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                          placeholder="Must be atleast 6 characters"
-                          type="password"
-                        />
-                      </div>
-                      <div className="mt-8">
-                        <button className="btn3  bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600 ">
-                          Login
-                        </button>
-                      </div></>}
+                      {step === 0 && (
+                        <>
+                          <div class="mt-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                              {t("email")}{" "}
+                            </label>
+                            <input
+                              class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                              type="email"
+                              placeholder="john@example.com"
+                            />
+                          </div>
+                          <div class="mt-4">
+                            <div class="flex justify-between">
+                              <label class="block text-gray-700 text-sm font-bold mb-2">
+                                {t("password")}
+                              </label>
+                              <a href="/" class="text-xs text-blue-500">
+                                {t("forget_password")}
+                              </a>
+                            </div>
+                            <input
+                              class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
+                              placeholder="Must be atleast 6 characters"
+                              type="password"
+                            />
+                          </div>
+                          <div className="mt-8">
+                            <button className="btn3  bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600 ">
+                              {t("login")}
+                            </button>
+                          </div>
+                        </>
+                      )}
 
                       <div className="mt-4 flex items-center justify-between">
                         <p className="text-sm">
-                          new to internarea? Register(
+                          {t("new_to_internarea")}(
                           <span
                             className="text-blue-500 cursor-pointer"
                             onClick={closeLogin}
                           >
-                            Student
+                            {t("student")}
                           </span>
                           /
                           <span
                             className="text-blue-500 cursor-pointer"
                             onClick={closeLogin}
                           >
-                            company
+                            {t("company")}
                           </span>
                           ){" "}
                         </p>
@@ -497,7 +633,7 @@ function Register() {
                   <div className="w-full p-8 lg:w-1/2">
                     <div class="mt-4">
                       <label class="block text-gray-700 text-sm font-bold mb-2">
-                        Email{" "}
+                        {t("email")}{" "}
                       </label>
                       <input
                         class=" text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
@@ -508,10 +644,10 @@ function Register() {
                     <div class="mt-4">
                       <div class="flex justify-between">
                         <label class="block text-gray-700 text-sm font-bold mb-2">
-                          Password
+                          {t("password")}
                         </label>
                         <a href="/" class="text-xs text-blue-500">
-                          Forget Password?
+                          {t("forget_password")}
                         </a>
                       </div>
                       <input
@@ -522,25 +658,25 @@ function Register() {
                     </div>
                     <div className="mt-8">
                       <button className="btn3  bg-blue-500 h-9 text-white font-bold py-2 px-4 w-full rounded hover:bg-blue-600 ">
-                        Login
+                        {t("login")}
                       </button>
                     </div>
 
                     <div className="mt-4 flex items-center justify-between">
                       <p className="text-sm">
-                        new to internarea? Register(
+                        {t("new_to_internarea")}(
                         <span
                           className="text-blue-500 cursor-pointer"
                           onClick={closeLogin}
                         >
-                          Student
+                          {t("student")}
                         </span>
                         /
                         <span
                           className="text-blue-500 cursor-pointer"
                           onClick={closeLogin}
                         >
-                          company
+                          {t("company")}
                         </span>
                         ){" "}
                       </p>

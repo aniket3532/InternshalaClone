@@ -4,9 +4,16 @@ import logo from "../../Assets/logo.png";
 import './sidebar.css'
 import { signOut } from "firebase/auth";
 import { auth } from "../../Firebase/firebase";
+import LanguageDropdown from "./languageDropdown";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../Feature/Userslice";
+import { useTranslation } from "react-i18next";
 
 const Sidebar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const user = useSelector(selectUser);
+
+  const {t} = useTranslation();
 
   const navigate = useNavigate();
 
@@ -34,8 +41,6 @@ const Sidebar = () => {
       document.removeEventListener("click", handleOutsideClick);
     };
   }, [sidebarOpen]);
-
-  const user = null;
 
 
   const logoutFunction = () => {
@@ -65,7 +70,7 @@ const Sidebar = () => {
                   />
                 </Link>
                 <p className=" text-center">
-                  Profile name{" "}
+                  {t("profile_name")}{" "}
                   <span className="font-bold text-blue-500">{user?.name}</span>
                 </p>
               </div>
@@ -73,46 +78,48 @@ const Sidebar = () => {
           ) : (
             <div className="auth"></div>
           )}
-          <Link to="/internship">internships </Link>
-          <Link to="/Jobs">Jobs </Link>
+          <Link to="/internship">{t("internships")} </Link>
+          <Link to="/Jobs">{t("job")} </Link>
 
           <Link to={"/"} className="small">
-            contact Us
+            {t("contact_us")}
           </Link>
+          <div className="flex justify-center"><LanguageDropdown /></div>
           <hr />
           {user ? (
             <>
               <div className="addmore">
                 {user ? (
                   <Link to={"/userapplication"}>
-                    <p>My Applications</p>
+                    <p>{t("my_applications")}</p>
                   </Link>
                 ) : (
                   <Link to={"/register"}>
-                    <p>My Applications</p>
+                    <p>{t("my_applications")}</p>
                   </Link>
                 )}
 
                 <Link>
-                  <p>View Resume</p>
+                  <p>{t("view_resume")}</p>
                 </Link>
                 <Link>
-                  <p>More</p>
+                  <p>{t("more")}</p>
                 </Link>
                 <button className="bt-log" id="bt" onClick={logoutFunction}>
-                  Logout <i class="bi bi-box-arrow-right"></i>
+                  {t("logout")} <i class="bi bi-box-arrow-right"></i>
                 </button>
                 <br />
                 <br />
-                <button onClick={logoutFunction}>
-                  Log Out <i class="bi bi-box-arrow-right"></i>
+                <button className="bt-log" onClick={logoutFunction}>
+                  {t("logout")} <i class="bi bi-box-arrow-right"></i>
                 </button>
               </div>
             </>
           ) : (
             <div className="addmore">
-              <p>Register- As a Student</p>
-              <p>Register- As a Employer</p>
+              <p className="">{t("register_as_a_student")}</p>
+              <p>{t("register_as_an_employer")}</p>
+              
               <br />
               <br />
             </div>
@@ -141,18 +148,18 @@ const Sidebar = () => {
             <div className="reg">
               <Link to="/register">
                 {" "}
-                <button className="btn4">Register</button>
+                <button className="btn4">{t("register")}</button>
               </Link>
             </div>
             <div className="admin">
               <Link to={"/adminLog"}>
-                <button id="admin"> Admin Login</button>
+                <button id="admin"> {t("admin_login")}</button>
               </Link>
             </div>
           </>
         )}
 
-        <p className="text-red-300">Hire Talent</p>
+        <p className="text-red-300">{t("hire_talent")}</p>
       </div>
     </>
   );

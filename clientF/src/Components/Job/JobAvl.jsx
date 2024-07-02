@@ -3,6 +3,7 @@ import "./job.css";
 import compLogo from "../../Assets/netflix.png";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 function JobAvl() {
   const [serachCategory, setSearchCategory] = useState("");
   const [searchLoaction, setSearchLocation] = useState("");
@@ -51,6 +52,7 @@ function JobAvl() {
   useEffect(() => {
     filterJobs(serachCategory, searchLoaction);
   }, [searchLoaction, serachCategory]);
+  const {t} = useTranslation();
 
   return (
     <>
@@ -58,10 +60,10 @@ function JobAvl() {
         <div className="first-int mb-14">
           <div className="filter-section w-1/6">
             <p className="text-center">
-              <i class="bi bi-funnel  text-blue-400"></i> Filter
+              <i class="bi bi-funnel  text-blue-400"></i> {t("filter")}
             </p>
             <div className="fill flex flex-col ml-2">
-              <label htmlFor="pro">Profile</label>
+              <label htmlFor="pro">{t("profile")}</label>
               <input
                 type="text"
                 id="pro"
@@ -70,7 +72,7 @@ function JobAvl() {
                 className="profile border-2 mr-3 w-full"
                 placeholder="Profile manager"
               />
-              <label htmlFor="loc">Location</label>
+              <label htmlFor="loc">{t("location")}</label>
               <input
                 type="text"
                 id="loc"
@@ -88,7 +90,7 @@ function JobAvl() {
                   id="whf"
                   className="mr-2 ml-3"
                 />
-                <label htmlFor="wfh">Work From home</label>
+                <label htmlFor="wfh">{t("work_from_home")}</label>
               </div>
               <div className="flex mt-3 ml-3 mr-3">
                 <input
@@ -97,9 +99,9 @@ function JobAvl() {
                   id="whf"
                   className="mr-2 ml-3"
                 />
-                <label htmlFor="pt">Part-time</label>
+                <label htmlFor="pt">{t("part_time")}</label>
               </div>
-              <p> Annual salary (in lakhs)</p>
+              <p> {t("annual_salary_in_lakhs")}</p>
               <input type="range" name="" id="" />
               <p className="mt-2 ml-3 mr-3">
                 0 2K &nbsp; 4k &nbsp; 6K &nbsp; 8k &nbsp; 10K
@@ -107,15 +109,15 @@ function JobAvl() {
             </div>
 
             <p className=" mt-5 text-blue-400">
-              View more filters <i class="bi bi-chevron-down"></i>
+              {t("view_more_filters")} <i class="bi bi-chevron-down"></i>
             </p>
             <span className="justify-end flex text-blue-400 mr-3">
-              Clear all
+              {t("clear_all")}
             </span>
           </div>
           <div className="search-2">
             <div className="search-container">
-              <label htmlFor="ex ">Experince</label>
+              <label htmlFor="ex ">{t("experience")}</label>
               <input type="text" id="ex" placeholder="eg. 0-1 year" />
               <div className="search-icon">
                 <i class="bi bi-search"></i>
@@ -132,7 +134,7 @@ function JobAvl() {
             </p>
           </div>
           <p className="head font-bold text-lg text-center ">
-            {filterJob.length} total Jobs
+            {filterJob.length} {t("total_jobs")}
           </p>
 
           {filterJob.map((data, index) => (
@@ -141,7 +143,7 @@ function JobAvl() {
                 <p className="mb-4 mt-3" id="boxer">
                   {" "}
                   <i className="bi bi-arrow-up-right text-blue-500"></i>{" "}
-                  Actively Hiring
+                  {t("actively_hiring")}
                 </p>
                 <div className="flex justify-end">
                   <img src={compLogo} className="w-14" alt="" />
@@ -159,20 +161,20 @@ function JobAvl() {
                   <div className="flex text-sm justify-between">
                     <p className="mt-3">
                       {" "}
-                      <i class="bi bi-play-circle-fill"></i> Start Date <br />{" "}
+                      <i class="bi bi-play-circle-fill"></i> {t("start_date")} <br />{" "}
                       {data.StartDate}
                     </p>
 
                     <p className="mt-3">
                       {" "}
-                      <i class="bi bi-calendar-check-fill"></i> Experience{" "}
+                      <i class="bi bi-calendar-check-fill"></i> {t("experience")}{" "}
                       <br />
                       {data.Experience}
                     </p>
 
                     <p className="mt-3">
                       {" "}
-                      <i class="bi bi-cash"></i> Salary <br /> {data.CTC}
+                      <i class="bi bi-cash"></i> {t("salary")} <br /> {data.CTC}
                     </p>
                   </div>
                 </div>
@@ -189,7 +191,7 @@ function JobAvl() {
                       id="viewButtons"
                       className="bg-transparent text-blue-500"
                     >
-                      View In Deatils
+                      {t("view_in_details")}
                     </button>
                   </Link>
                 </div>
@@ -206,10 +208,10 @@ function JobAvl() {
                 <i class=" text-3xl bi bi-x"></i>
               </button>
               <p className="text-center">
-                <i class="bi bi-funnel  text-blue-400"></i> Filter
+                <i class="bi bi-funnel  text-blue-400"></i> {t("filter")}
               </p>
               <div className="fill flex flex-col ml-2">
-                <label htmlFor="pro">Profile</label>
+                <label htmlFor="pro">{t("profile")}</label>
                 <input
                   type="text"
                   id="pro"
@@ -218,7 +220,7 @@ function JobAvl() {
                   className="profile border-2 mr-3 w-full"
                   placeholder="Profile manager"
                 />
-                <label htmlFor="loc">Location</label>
+                <label htmlFor="loc">{t("location")}</label>
                 <input
                   type="text"
                   id="loc"
@@ -236,7 +238,7 @@ function JobAvl() {
                     id="whf"
                     className="mr-2 ml-3"
                   />
-                  <label htmlFor="wfh">Work From home</label>
+                  <label htmlFor="wfh">{t("work_from_home")}</label>
                 </div>
                 <div className="flex mt-3 ml-3 mr-3">
                   <input
@@ -245,9 +247,9 @@ function JobAvl() {
                     id="whf"
                     className="mr-2 ml-3"
                   />
-                  <label htmlFor="pt">Part-time</label>
+                  <label htmlFor="pt">{t("part_time")}</label>
                 </div>
-                <p> Annual salary (in lakhs)</p>
+                <p> {t("annual_salary_in_lakhs")}</p>
                 <input type="range" name="" id="" />
                 <p className="mt-2 ml-3 mr-3">
                   0 2K &nbsp; 4k &nbsp; 6K &nbsp; 8k &nbsp; 10K
@@ -255,15 +257,15 @@ function JobAvl() {
               </div>
 
               <p className=" mt-5 text-blue-400">
-                View more filters <i class="bi bi-chevron-down"></i>
+                {t("view_more_filters")} <i class="bi bi-chevron-down"></i>
               </p>
               <span className="justify-end flex text-blue-400 mr-3">
-                Clear all
+                {t("clear_all")}
               </span>
             </div>
             <div className="search-2">
               <div className="search-container">
-                <label htmlFor="ex ">Experince</label>
+                <label htmlFor="ex ">{t("experience")}</label>
                 <input type="text" id="ex" placeholder="eg. 0-1 year" />
                 <div className="search-icon">
                   <i class="bi bi-search"></i>
