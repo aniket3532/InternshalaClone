@@ -21,7 +21,7 @@ import PostJOb from "./Admin/PostJob";
 import DeatilApplication from "./Applications/DeatilApplication";
 import DeatilApplicationUser from "./Applications/DeatilApplicationUser";
 import UserApplicatiom from "./Components/profile/UserApplicatiom";
-import { auth } from "../src/Firebase/firebase";
+import { auth } from "./Firebase/firebase";
 
 function App() {
 
