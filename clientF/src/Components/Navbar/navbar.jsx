@@ -61,7 +61,7 @@ function Navbar() {
         toast.success("OTP sent successfully");
       })
       .catch((error) => {
-        alert(error.message);
+        // alert(error.message);
         console.log(error);
       });
   };

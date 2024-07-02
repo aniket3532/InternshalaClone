@@ -47,7 +47,7 @@ const LanguageDropdown = () => {
   const verifyEmailOtp = () => {
     if(generateotp === otpValue) {
       i18n.changeLanguage(selectedLanguage);
-      document.body.style.backgroundColor = "yellow";
+      document.body.style.backgroundColor = "#ffffe0";
       setIsOtpModalOpen(false);
   }
   else{
@@ -103,13 +103,13 @@ const LanguageDropdown = () => {
         i18n.changeLanguage(selectedLanguage);
         switch (selectedLanguage) {
           case "hi":
-            document.body.style.backgroundColor = "#d7ebf4";
+            document.body.style.backgroundColor = "#f0f7fc";
             break;
           case "zh":
-            document.body.style.backgroundColor = "#d6f5d6";
+            document.body.style.backgroundColor = "#f0f9f0";
             break;
           case "fr":
-            document.body.style.backgroundColor = "#fff7cc";
+            document.body.style.backgroundColor = "#ffffe0";
             break;
           default:
             document.body.style.backgroundColor = "white";
